@@ -1,5 +1,7 @@
 package com.testing.load.common.jwt;
 
+import com.testing.load.common.exception.BusinessException;
+import com.testing.load.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -19,6 +21,7 @@ import java.util.List;
 public class JwtAuthenticationFilter implements WebFilter {
 
     private final JwtProvider jwtProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -31,16 +34,22 @@ public class JwtAuthenticationFilter implements WebFilter {
         jwtProvider.validateToken(token);
         Long userId = jwtProvider.getUserId(token);
 
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(
-                        userId,
-                        null, // jwt니까 필요없음
-                        List.of(new SimpleGrantedAuthority("ROLE_USER"))
-                );
+        return tokenBlacklistService.isBlacklisted(token)
+                .flatMap(isBlacklisted -> {
+                    if (isBlacklisted) {
+                        return Mono.error(new BusinessException(ErrorCode.TOKEN_INVALID));
+                    }
 
-        // 리액티브 컨텍스트에 인증 정보 저장
-        return chain.filter(exchange)
-                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authenticationToken));
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userId,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                            );
+
+                    return chain.filter(exchange)
+                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
+                });
     }
 
     private String resolveToken(ServerHttpRequest request) {

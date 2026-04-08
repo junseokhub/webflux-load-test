@@ -14,15 +14,6 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    @Transactional
-    public Mono<User> createUser(String username) {
-        return userRepository.findByUsername(username)
-                .flatMap(existingUser -> Mono.<User>error(new BusinessException(ErrorCode.USER_ALREADY_EXISTS)))
-                .switchIfEmpty(Mono.defer(() -> userRepository.save(User.builder()
-                        .username(username)
-                        .build())));
-    }
-
     @Transactional(readOnly = true)
     public Mono<User> findById(Long id) {
         return userRepository.findById(id)

@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS users
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
     username   VARCHAR(50)  NOT NULL UNIQUE,
     password   VARCHAR(255) NOT NULL,
-    created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)
+    created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)
 );
 
 CREATE TABLE IF NOT EXISTS coupons
@@ -12,7 +13,8 @@ CREATE TABLE IF NOT EXISTS coupons
     name            VARCHAR(100) NOT NULL,
     total_stock     INT          NOT NULL,
     remaining_stock INT          NOT NULL,
-    created_at      DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)
+    created_at      DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)
 );
 
 CREATE TABLE IF NOT EXISTS coupon_issues

@@ -33,6 +33,12 @@ dependencies {
 
 	implementation("org.springframework.boot:spring-boot-starter-security")
 
+	implementation("com.fasterxml.jackson.core:jackson-databind")
+
+	implementation("org.flywaydb:flyway-core")
+	implementation("org.flywaydb:flyway-mysql")
+	runtimeOnly("com.mysql:mysql-connector-j")
+
 	implementation("io.jsonwebtoken:jjwt-api:0.13.0")
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
