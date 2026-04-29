@@ -3,6 +3,7 @@ package com.testing.load.common.config;
 import com.testing.load.common.properties.AppProperties;
 import com.testing.load.coupon.repository.CouponIssueRepository;
 import com.testing.load.coupon.repository.CouponRepository;
+import com.testing.load.order.consumer.KafkaConsumerSupport;
 import com.testing.load.order.repository.OrderRepository;
 import com.testing.load.product.repository.ProductRepository;
 import com.testing.load.user.UserRepository;
@@ -25,6 +26,7 @@ public class DataInitializer implements ApplicationRunner {
     private final ProductRepository productRepository;
     private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
     private final AppProperties appProperties;
+    private final KafkaConsumerSupport kafkaConsumerSupport;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -73,7 +75,7 @@ public class DataInitializer implements ApplicationRunner {
         // 5. 상품 Redis 재고 초기화
         productRepository.findAll()
                 .flatMap(product -> {
-                    String stockKey = "product:" + product.getId() + ":stock";
+                    String stockKey = "{product:" + product.getId() + "}:stock";
 
                     return reactiveRedisTemplate.opsForValue()
                             .set(stockKey, String.valueOf(product.getStock()))
@@ -84,5 +86,9 @@ public class DataInitializer implements ApplicationRunner {
                 })
                 .doOnError(e -> log.error("상품 Redis 초기화 실패: {}", e.getMessage()))
                 .subscribe();
+
+        // 6. KafkaConsumerSupport 초기화
+        kafkaConsumerSupport.reset();
+        log.info("KafkaConsumerSupport 초기화 완료");
     }
 }

@@ -26,16 +26,28 @@ public class OrderServiceConfig {
     @Bean
     public OrderService orderService() {
         OrderService service = switch (orderProperties.serviceType()) {
-            case REDIS_LUA -> new RedisLuaOrderService(
-                    productRepository, reactiveRedisTemplate, defaultOrderService);
-            case OPTIMISTIC_LOCK -> new OptimisticLockOrderService(
-                    productRepository, defaultOrderService);
-            case PESSIMISTIC_LOCK -> new PessimisticLockOrderService(
-                    productRepository, databaseClient, defaultOrderService);
+            case REDIS_LUA -> redisLuaOrderService();
+            case OPTIMISTIC_LOCK -> optimisticLockOrderService();
+            case PESSIMISTIC_LOCK -> pessimisticLockOrderService();
             case KAFKA_ASYNC -> new KafkaAsyncOrderService(kafkaTemplate);
             case KAFKA_SYNC -> new KafkaSyncOrderService(kafkaTemplate);
         };
         log.info("OrderService 구현체: {}", service.getClass().getSimpleName());
         return service;
+    }
+
+    @Bean
+    public RedisLuaOrderService redisLuaOrderService() {
+        return new RedisLuaOrderService(productRepository, reactiveRedisTemplate, defaultOrderService);
+    }
+
+    @Bean
+    public OptimisticLockOrderService optimisticLockOrderService() {
+        return new OptimisticLockOrderService(productRepository, defaultOrderService);
+    }
+
+    @Bean
+    public PessimisticLockOrderService pessimisticLockOrderService() {
+        return new PessimisticLockOrderService(productRepository, databaseClient, defaultOrderService);
     }
 }

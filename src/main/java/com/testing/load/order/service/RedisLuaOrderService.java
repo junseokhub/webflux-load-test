@@ -31,7 +31,7 @@ public class RedisLuaOrderService implements OrderService {
 
     @Override
     public Mono<Order> createOrder(Long userId, Long productId, Long couponIssueId) {
-        String stockKey = "product:" + productId + ":stock";
+        String stockKey = "{product:" + productId + "}:stock";
 
         return reactiveRedisTemplate.execute(
                         RedisScript.of(DECREMENT_STOCK_SCRIPT, Long.class),
