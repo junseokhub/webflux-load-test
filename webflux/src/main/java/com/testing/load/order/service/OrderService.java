@@ -4,5 +4,5 @@ import com.testing.load.order.domain.Order;
 import reactor.core.publisher.Mono;
 
 public interface OrderService {
-    Mono<Order> createOrder(Long userId, Long productId, Long couponIssueId);
+    Mono<Order> createOrder(Long userId, Long productId, Long couponIssueId, String correlationId);
 }

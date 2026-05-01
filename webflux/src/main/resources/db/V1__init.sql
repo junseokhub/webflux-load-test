@@ -48,12 +48,26 @@ CREATE TABLE orders (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
-    coupon_issue_id BIGINT,          -- 쿠폰 적용 (선택)
-    original_price INT NOT NULL,      -- 원래 가격
-    final_price INT NOT NULL,         -- 쿠폰 적용 후 가격
+    coupon_issue_id BIGINT,
+    original_price INT NOT NULL,
+    final_price INT NOT NULL,
+    correlation_id VARCHAR(36) UNIQUE,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at DATETIME(6),
     updated_at DATETIME(6),
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (product_id) REFERENCES products(id)
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    UNIQUE KEY uk_orders_correlation_id (correlation_id)
+);
+
+CREATE TABLE outbox (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    aggregate_id BIGINT NOT NULL,
+    event_type VARCHAR(50) NOT NULL,
+    payload TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    retry_count INT NOT NULL DEFAULT 0,
+    failed_reason VARCHAR(500),
+    created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)
 );

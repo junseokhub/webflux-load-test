@@ -44,7 +44,7 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 
 	implementation("org.springframework.kafka:spring-kafka")
-	implementation("io.projectreactor.kafka:reactor-kafka")
+	implementation("io.projectreactor.kafka:reactor-kafka:1.3.25")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-redis-reactive-test")

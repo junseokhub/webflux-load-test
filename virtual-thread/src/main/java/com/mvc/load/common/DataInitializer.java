@@ -3,6 +3,7 @@ package com.mvc.load.common;
 import com.mvc.load.common.properties.AppProperties;
 import com.mvc.load.order.OrderRepository;
 import com.mvc.load.order.consumer.KafkaConsumerSupport;
+import com.mvc.load.outbox.OutboxRepository;
 import com.mvc.load.product.Product;
 import com.mvc.load.product.ProductRepository;
 import com.mvc.load.user.Role;
@@ -25,6 +26,7 @@ public class DataInitializer implements ApplicationRunner {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final OutboxRepository outboxRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final KafkaConsumerSupport kafkaConsumerSupport;
     private final AppProperties appProperties;
@@ -64,6 +66,9 @@ public class DataInitializer implements ApplicationRunner {
         // 1. orders 초기화
         orderRepository.deleteAll();
         log.info("orders 초기화 완료");
+
+        outboxRepository.deleteAll();
+        log.info("outbox 초기화 완료");
 
         // 2. DB stock 리셋
         jdbcTemplate.update("UPDATE products SET stock = ?", initialStock);

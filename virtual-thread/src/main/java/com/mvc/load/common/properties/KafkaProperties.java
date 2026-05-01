@@ -1,4 +1,4 @@
-package com.testing.load.common.properties;
+package com.mvc.load.common.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -15,7 +15,6 @@ public record KafkaProperties(
 
     public record Consumer(
             String groupId,
-            String resultGroupId,  // 추가
             String keyDeserializer,
             String valueDeserializer,
             String autoOffsetReset

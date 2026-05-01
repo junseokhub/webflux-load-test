@@ -10,13 +10,11 @@ import com.testing.load.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-@Service
 @RequiredArgsConstructor
 public class RedisLuaOrderService implements OrderService {
 
@@ -37,7 +35,7 @@ public class RedisLuaOrderService implements OrderService {
 
     @Override
     @Transactional
-    public Mono<Order> createOrder(Long userId, Long productId, Long couponIssueId) {
+    public Mono<Order> createOrder(Long userId, Long productId, Long couponIssueId, String correlationId) {
         String stockKey = "{product:" + productId + "}:stock";
 
         return reactiveRedisTemplate.execute(
@@ -49,16 +47,15 @@ public class RedisLuaOrderService implements OrderService {
                     if (result == -1L) {
                         return Mono.error(new BusinessException(ErrorCode.PRODUCT_OUT_OF_STOCK));
                     }
-                    // Redis stock 차감 완료 — 이후 DB 실패 시 반드시 보상 필요
-                    return saveOrderWithOutbox(userId, productId, couponIssueId)
+                    return saveOrderWithOutbox(userId, productId, couponIssueId, correlationId)
                             .onErrorResume(e -> compensateRedisStock(stockKey).then(Mono.error(e)));
                 });
     }
 
-    private Mono<Order> saveOrderWithOutbox(Long userId, Long productId, Long couponIssueId) {
+    private Mono<Order> saveOrderWithOutbox(Long userId, Long productId, Long couponIssueId, String correlationId) {
         return productRepository.findById(productId)
                 .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.PRODUCT_NOT_FOUND)))
-                .flatMap(product -> defaultOrderService.saveOrder(userId, product, couponIssueId))
+                .flatMap(product -> defaultOrderService.saveOrder(userId, product, couponIssueId, correlationId))
                 .flatMap(order -> {
                     try {
                         String payload = objectMapper.writeValueAsString(

@@ -1,41 +1,29 @@
 package com.testing.load.order.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.testing.load.order.domain.Order;
 import com.testing.load.order.dto.OrderMessage;
-import com.testing.load.order.dto.OrderResult;
 import com.testing.load.order.service.RedisLuaOrderService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.beans.factory.annotation.Qualifier;
+import reactor.core.publisher.Mono;
+import reactor.kafka.receiver.ReceiverOptions;
 
-@Slf4j
-@RequiredArgsConstructor
-public class LuaOrderKafkaConsumer implements OrderKafkaConsumer {
+public class LuaOrderKafkaConsumer extends AbstractOrderKafkaConsumer {
 
-    private final RedisLuaOrderService redisLuaOrderService;
-    private final KafkaConsumerSupport support;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RedisLuaOrderService service;
 
-    @KafkaListener(topics = "order-requests", groupId = "order-consumer-group")
-    public void consume(String message) {
-        try {
-            OrderMessage orderMessage = objectMapper.readValue(message, OrderMessage.class);
-            processOrder(orderMessage);
-        } catch (Exception e) {
-            log.error("order-requests 처리 실패, DLQ로 이동: {}", e.getMessage());
-            support.sendToDlq(message);
-        }
+    public LuaOrderKafkaConsumer(
+            RedisLuaOrderService service,
+            KafkaConsumerSupport support,
+            ObjectMapper objectMapper,
+            @Qualifier("orderRequestReceiverOptions") ReceiverOptions<String, String> receiverOptions
+    ) {
+        super(support, objectMapper, receiverOptions);
+        this.service = service;
     }
 
-    private void processOrder(OrderMessage orderMessage) {
-        redisLuaOrderService.createOrder(
-                        orderMessage.userId(),
-                        orderMessage.productId(),
-                        orderMessage.couponIssueId()
-                )
-                .doOnSuccess(order -> support.sendResult(OrderResult.success(
-                        orderMessage.correlationId(), order)))
-                .doOnError(e -> support.handleError(e, orderMessage))
-                .subscribe();
+    @Override
+    protected Mono<Order> createOrder(OrderMessage msg) {
+        return service.createOrder(msg.userId(), msg.productId(), msg.couponIssueId(), msg.correlationId());
     }
 }

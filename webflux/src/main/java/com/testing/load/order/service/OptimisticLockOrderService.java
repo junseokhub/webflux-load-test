@@ -24,9 +24,9 @@ public class OptimisticLockOrderService implements OrderService {
 
     @Override
     @Transactional
-    public Mono<Order> createOrder(Long userId, Long productId, Long couponIssueId) {
+    public Mono<Order> createOrder(Long userId, Long productId, Long couponIssueId, String correlationId) {
         return decrementStock(productId)
-                .flatMap(product -> defaultOrderService.saveOrder(userId, product, couponIssueId));
+                .flatMap(product -> defaultOrderService.saveOrder(userId, product, couponIssueId, correlationId));
     }
 
     private Mono<Product> decrementStock(Long productId) {

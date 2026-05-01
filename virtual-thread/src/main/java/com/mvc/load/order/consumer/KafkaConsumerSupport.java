@@ -53,7 +53,7 @@ public class KafkaConsumerSupport {
             if (count % 1000 == 0) {
                 log.info("===== 처리 진행: {}건 =====", count);
             }
-            if (count == 10000) {
+            if (count >= 10000 && count < 10005) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 log.info("============================");
                 log.info("✅ 주문 처리 완료: 10,000건");

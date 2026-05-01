@@ -19,7 +19,16 @@ public class DefaultOrderService {
     private final CouponIssueRepository couponIssueRepository;
     private final CouponRepository couponRepository;
 
-    public Mono<Order> saveOrder(Long userId, Product product, Long couponIssueId) {
+    public Mono<Order> saveOrder(Long userId, Product product, Long couponIssueId, String correlationId) {
+        if (correlationId == null) {
+            return saveNewOrder(userId, product, couponIssueId, null);
+        }
+
+        return orderRepository.findByCorrelationId(correlationId)
+                .switchIfEmpty(Mono.defer(() -> saveNewOrder(userId, product, couponIssueId, correlationId)));
+    }
+
+    private Mono<Order> saveNewOrder(Long userId, Product product, Long couponIssueId, String correlationId) {
         return resolveFinalPrice(product, couponIssueId)
                 .flatMap(finalPrice -> orderRepository.save(
                         Order.builder()
@@ -28,6 +37,7 @@ public class DefaultOrderService {
                                 .couponIssueId(couponIssueId)
                                 .originalPrice(product.getPrice())
                                 .finalPrice(finalPrice)
+                                .correlationId(correlationId)
                                 .build()
                 ));
     }

@@ -19,16 +19,18 @@ public class Order extends BaseEntity {
     private Long couponIssueId;  // nullable
     private int originalPrice;
     private int finalPrice;
+    private String correlationId;
     private OrderStatus status;  // PENDING, CONFIRMED, CANCELLED
 
     @Builder
     public Order(Long userId, Long productId, Long couponIssueId,
-                 int originalPrice, int finalPrice) {
+                 int originalPrice, int finalPrice, String correlationId) {
         this.userId = userId;
         this.productId = productId;
         this.couponIssueId = couponIssueId;
         this.originalPrice = originalPrice;
         this.finalPrice = finalPrice;
+        this.correlationId = correlationId;
         this.status = OrderStatus.PENDING;
     }
 
